@@ -1,0 +1,74 @@
+.header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  background: #1f2937; 
+}
+
+.tab {
+  border-radius: 10px 10px 0px 0px;
+  background-color: rgb(105, 132, 156);
+  color: #d1d5db;
+  padding: 1rem;
+}
+
+main {
+  display:flex;
+  flex-wrap: wrap;
+}
+
+.card {
+  background-color: rgb(145, 145, 145);
+  box-shadow: 0px 10px 5px rgba(0, 0, 0, 0.25);
+  border: #1f2937;
+  border-radius: 10px;
+  width: 10rem;
+  height: 12rem;
+  margin: 10px;
+  padding: 10px;
+  display: grid;
+  grid-template-areas: 
+    'id name'
+    'other other';
+}
+
+.name {
+  grid-area: name; 
+  overflow: hidden;
+  width: 100px;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  display: block;
+  line-height: 1em; /* a */
+  max-height: 2em; /* a x number of line to show (ex : 2 line)  */
+}
+
+.id {
+  grid-area: id; 
+  width:20%; 
+  margin-right: 5px;
+}
+
+.number {
+  grid-area: other; 
+  width: 100%;
+}
+
+input {
+  width: 95%;
+}
+
+#loading-spinner {
+  /* Styles for your spinner, e.g., animation, positioning */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  background-color: black;
+  color: white;
+  padding: 200px;
+  font-size: 20px;
+  border-radius: 10px;
+}

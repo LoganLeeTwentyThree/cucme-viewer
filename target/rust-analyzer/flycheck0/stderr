@@ -1,0 +1,34 @@
+   0.560113000s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme_viewer_lib"}: cargo::core::compiler::fingerprint: stale: changed "C:\\Users\\admin\\Desktop\\cucme-viewer\\src-tauri\\tauri.conf.json"
+   0.560179600s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme_viewer_lib"}: cargo::core::compiler::fingerprint:           (vs) "C:\\Users\\admin\\Desktop\\cucme-viewer\\src-tauri\\target\\debug\\build\\cucme-viewer-a37861f5867e7694\\output"
+   0.560191400s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme_viewer_lib"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 13406655587, nanos: 973943600 } < FileTime { seconds: 13406657789, nanos: 951685300 }
+   0.588983300s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme_viewer_lib"}: cargo::core::compiler::fingerprint: fingerprint dirty for cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri)/Check { test: false }/TargetInner { ..: lib_target("cucme_viewer_lib", ["staticlib", "cdylib", "rlib"], "C:\\Users\\admin\\Desktop\\cucme-viewer\\src-tauri\\src\\lib.rs", Edition2021) }
+   0.589051900s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme_viewer_lib"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "build_script_build" })
+   0.591756900s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="build-script-build"}: cargo::core::compiler::fingerprint: fingerprint dirty for cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri)/RunCustomBuild/TargetInner { ..: custom_build_target("build-script-build", "C:\\Users\\admin\\Desktop\\cucme-viewer\\src-tauri\\build.rs", Edition2021) }
+   0.591794600s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="build-script-build"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "C:\\Users\\admin\\Desktop\\cucme-viewer\\src-tauri\\target\\debug\\build\\cucme-viewer-a37861f5867e7694\\output", reference_mtime: FileTime { seconds: 13406655587, nanos: 973943600 }, stale: "C:\\Users\\admin\\Desktop\\cucme-viewer\\src-tauri\\tauri.conf.json", stale_mtime: FileTime { seconds: 13406657789, nanos: 951685300 } }))
+   0.672545000s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme_viewer_lib"}: cargo::core::compiler::fingerprint: fingerprint dirty for cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri)/Check { test: true }/TargetInner { ..: lib_target("cucme_viewer_lib", ["staticlib", "cdylib", "rlib"], "C:\\Users\\admin\\Desktop\\cucme-viewer\\src-tauri\\src\\lib.rs", Edition2021) }
+   0.672602800s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme_viewer_lib"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "build_script_build" })
+   0.674663100s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme-viewer"}: cargo::core::compiler::fingerprint: fingerprint dirty for cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri)/Check { test: false }/TargetInner { name: "cucme-viewer", doc: true, ..: with_path("C:\\Users\\admin\\Desktop\\cucme-viewer\\src-tauri\\src\\main.rs", Edition2021) }
+   0.674710200s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme-viewer"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "cucme_viewer_lib" })
+   0.676598200s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme-viewer"}: cargo::core::compiler::fingerprint: fingerprint dirty for cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri)/Check { test: true }/TargetInner { name: "cucme-viewer", doc: true, ..: with_path("C:\\Users\\admin\\Desktop\\cucme-viewer\\src-tauri\\src\\main.rs", Edition2021) }
+   0.676629400s  INFO prepare_target{force=false package_id=cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri) target="cucme-viewer"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "cucme_viewer_lib" })
+   Compiling cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri)
+error: failed to run custom build command for `cucme-viewer v0.1.0 (C:\Users\admin\Desktop\cucme-viewer\src-tauri)`
+note: To improve backtraces for build dependencies, set the CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true environment variable to enable debug information generation.
+
+Caused by:
+  process didn't exit successfully: `C:\Users\admin\Desktop\cucme-viewer\src-tauri\target\debug\build\cucme-viewer-630b7ba1476f795e\build-script-build` (exit code: 1)
+  --- stdout
+  cargo:rerun-if-env-changed=TAURI_CONFIG
+  cargo:rustc-check-cfg=cfg(desktop)
+  cargo:rustc-cfg=desktop
+  cargo:rustc-check-cfg=cfg(mobile)
+  cargo:rerun-if-changed=C:\Users\admin\Desktop\cucme-viewer\src-tauri\tauri.conf.json
+  cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_APP_NAME=cucme_viewer
+  cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_PREFIX=com_admin
+  cargo:rustc-check-cfg=cfg(dev)
+  cargo:rustc-cfg=dev
+  cargo:PERMISSION_FILES_PATH=C:\Users\admin\Desktop\cucme-viewer\src-tauri\target\debug\build\cucme-viewer-a37861f5867e7694\out\app-manifest\__app__-permission-files
+  cargo:rerun-if-changed=capabilities
+  cargo:rerun-if-env-changed=REMOVE_UNUSED_COMMANDS
+  cargo:rustc-env=TAURI_ENV_TARGET_TRIPLE=x86_64-pc-windows-msvc
+  resource path `src-tauri\src\resources\plink.exe-x86_64-pc-windows-msvc.exe` doesn't exist
