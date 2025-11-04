@@ -1,0 +1,38 @@
+use std::process::{Command, Stdio, ChildStdin, ChildStdout};
+use std::io::{self, Write};
+use std::env;
+
+pub struct SshSession {
+    pub stdin: ChildStdin,
+    pub stdout: ChildStdout,
+}
+
+impl SshSession{
+    pub fn send(&mut self, bytes : &[u8])
+    {
+        self.stdin.write_all(bytes).unwrap();
+        self.stdin.flush().unwrap();
+    }
+}
+
+pub fn start_ssh_session() -> io::Result<SshSession> {
+    let cmd = r"C:\Program Files\PuTTY\plink.exe";
+
+    let mut child = Command::new(cmd)
+        .args([
+            "-ssh",
+            "-l", &env::var("user").unwrap(),
+            "-pw", &env::var("password").unwrap(),
+            "-noagent",
+            "-batch",
+            &env::var("ip").unwrap(),
+        ])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()?;
+
+    let stdin = child.stdin.take().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "no stdin"))?;
+    let stdout = child.stdout.take().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "no stdout"))?;
+
+    Ok(SshSession { stdin, stdout })
+}

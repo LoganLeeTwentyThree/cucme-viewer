@@ -5,8 +5,6 @@
 .header {
   display: flex;
   width: 100%;
-  align-items: center;
-  justify-content: space-between;
   background: #1f2937; 
 }
 
@@ -15,6 +13,14 @@
   background-color: rgb(105, 132, 156);
   color: #d1d5db;
   padding: 1rem;
+  width: 5rem;
+  margin-right: 1px;
+  text-align: center;
+  transition: background-color 175ms linear;
+}
+
+.tab:hover {
+  background-color: rgb(132, 165, 195);
 }
 
 main {
