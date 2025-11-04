@@ -1,22 +1,23 @@
 use serde_json::{json, Value};
-use std::{env, io::{BufRead, BufReader, Read, Write}, process::{Command, Stdio}, thread, time::Duration};
+use std::{env, io::{BufRead, BufReader, Read, Write}, process::{ChildStdin, ChildStdout, Command, Stdio}, thread, time::Duration};
 use format_bytes::format_bytes;
 
 use regex::Regex;
 mod dn;
 use dn::*;
+mod pool;
+use pool::*;
 
 #[tauri::command]
-fn set_credentials(user : String, password : String)
+fn set_credentials(ip : String, user : String, password : String)
 {
+    env::set_var("ip", ip);
     env::set_var("user", user);
     env::set_var("password", password);
 }
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn get_phones() -> String {
-    
+fn start_ssh_session() -> (ChildStdin, ChildStdout)
+{
     let cmd = r"C:\Program Files\PuTTY\plink.exe"; 
     let mut child = Command::new(cmd)
     .args([
@@ -25,7 +26,7 @@ fn get_phones() -> String {
             "-pw", &env::var("password").unwrap(),
             "-noagent",
             "-batch", // disables any interactive GUI
-            "172.16.0.5",
+            &env::var("ip").unwrap(),
         ])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -33,8 +34,17 @@ fn get_phones() -> String {
         .spawn()
         .expect("failed to start plink");
 
-    let mut stdin = child.stdin.take().expect("no stdin");
+    let stdin = child.stdin.take().expect("no stdin");
     let stdout = child.stdout.take().expect("no stdout");
+
+    (stdin, stdout)
+} 
+
+// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+#[tauri::command]
+fn get_phones() -> String {
+    
+    let (mut stdin, stdout) = start_ssh_session();
 
     // Disable pagination
     stdin.write_all(b"terminal length 0\r\n").unwrap();
@@ -90,26 +100,65 @@ fn get_phones() -> String {
     Value::to_string(&json!(dns))
 }
 
+// fn get_pools() -> String {
+//     let (mut stdin, stdout) = start_ssh_session();
+    
+//     // Disable pagination
+//     stdin.write_all(b"terminal length 0\r\n").unwrap();
+//     stdin.flush().unwrap();
+//     thread::sleep(Duration::from_millis(300));
+
+//     stdin.write_all(b"show config\r\n").unwrap();
+//     stdin.flush().unwrap();
+//     thread::sleep(Duration::from_secs(2));
+
+//     // Exit the session gracefully
+//     writeln!(stdin, "exit").unwrap();
+//     stdin.flush().unwrap();
+
+    
+//     let mut reader = BufReader::new(stdout);
+//     let mut buf = String::new();
+//     let mut dns : Vec<DN> = Vec::new();
+
+//     loop{
+//         buf.clear();
+//         let num = reader.read_line(&mut buf).unwrap();
+//         if num == 0
+//         {
+//             break;
+//         }
+
+//         if buf.starts_with("voice register pool")
+//         {
+//             let mut byte_arr : Vec<u8> = Vec::new();
+//             reader.read_until(b'!', &mut byte_arr).unwrap();
+//             buf.push_str(&String::from_utf8_lossy(&byte_arr));
+
+//             let reg = Regex::new(r"(?ms)^\s*voice register pool\s+(\d+).*?^\s*number\s+(\d+)(?:.*?^\s*pickup-group\s+(\d+))?.*?^\s*name\s+([^\r\n]+).*?^\s*label\s+([^\r\n]+)").unwrap();
+//             if let Some(caps) = reg.captures(&buf) {
+//                 dns.push(DN {
+//                     id: caps.get(1).unwrap().as_str().parse().unwrap(),
+//                     number: caps.get(2).unwrap().as_str().parse().unwrap(),
+//                     pickup_group: caps.get(3)
+//                         .and_then(|m| m.as_str().parse::<i8>().ok()),
+//                     name: caps.get(4).unwrap().as_str().into(),
+//                     label: caps.get(5).unwrap().as_str().into(),         
+//                 });
+//             }else {
+//                 break;
+//             }
+            
+//         }
+
+        
+//     } 
+
+// }
+
 #[tauri::command]
 fn write_phone(dn : i8, name : String, label : String, number : i16, pickup : Option<i8>) -> String {
-    let cmd = r"C:\Program Files\PuTTY\plink.exe"; 
-    let mut child = Command::new(cmd)
-    .args([
-            "-ssh",
-            "-l", &env::var("user").unwrap(),
-            "-pw", &env::var("password").unwrap(),
-            "-noagent",
-            "-batch", // disables any interactive GUI
-            "172.16.0.5",
-        ])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("failed to start plink");
-
-    let mut stdin = child.stdin.take().expect("no stdin");
-    let stdout = child.stdout.take().expect("no stdout");
+    let (mut stdin, stdout) = start_ssh_session();
 
     // Disable pagination
     stdin.write_all(b"terminal length 0\r\n").unwrap();

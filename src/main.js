@@ -1,9 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 
 document.addEventListener("DOMContentLoaded", () =>{
+    let ip = prompt("Enter the ssh ip")
     let user = prompt("Enter the ssh username")
     let password = prompt("Enter the ssh password")
-    invoke("set_credentials", {user: user, password: password})
+    invoke("set_credentials", {ip: ip, user: user, password: password})
     populate_phones()
     
 })
@@ -18,19 +19,11 @@ function populate_phones()
         phone_arr.forEach(element => {
             let parent = document.createElement("div")
             parent.classList = "card"
-
-            let nameContainer = document.createElement("div")
-            nameContainer.classList = "name"
             
             let name = document.createElement("input")
             name.readOnly = true
             name.value = element.name
-
-            let nameLabel = document.createElement("div")
-            nameLabel.innerHTML = "Name:"
-
-            nameContainer.appendChild(nameLabel)
-            nameContainer.appendChild(name)
+            name.classList = "name"
 
             let id = document.createElement("div")
             id.innerHTML = element.id
@@ -64,7 +57,7 @@ function populate_phones()
             labelContainer.appendChild(label)
 
             parent.appendChild(id)
-            parent.appendChild(nameContainer)
+            parent.appendChild(name)
             parent.appendChild(container)
             container.appendChild(numberContainer)
             container.appendChild(labelContainer)

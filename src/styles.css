@@ -1,3 +1,7 @@
+* {
+  font-family: system-ui;
+}
+
 .header {
   display: flex;
   width: 100%;
@@ -14,12 +18,20 @@
 }
 
 main {
+  background-color: rgb(105, 132, 156);
   display:flex;
   flex-wrap: wrap;
 }
 
+input {
+  border-radius: 5px;
+  border: none;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
 .card {
-  background-color: rgb(145, 145, 145);
+  background-color: rgb(182, 182, 182);
   box-shadow: 0px 10px 5px rgba(0, 0, 0, 0.25);
   border: #1f2937;
   border-radius: 10px;
@@ -31,23 +43,30 @@ main {
   grid-template-areas: 
     'id name'
     'other other';
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: scale(1.05);
 }
 
 .name {
   grid-area: name; 
   overflow: hidden;
-  width: 100px;
   text-overflow: ellipsis;
-  word-wrap: break-word;
-  display: block;
-  line-height: 1em; /* a */
-  max-height: 2em; /* a x number of line to show (ex : 2 line)  */
 }
 
 .id {
   grid-area: id; 
-  width:20%; 
   margin-right: 5px;
+  background-color: #1f2937;
+  height: 1.5em;
+  width: 1.5em;
+  line-height: 1.5em;
+  padding: 2px;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
 }
 
 .number {
