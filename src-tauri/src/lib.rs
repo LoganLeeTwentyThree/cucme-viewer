@@ -16,8 +16,10 @@ fn set_credentials(ip : String, user : String, password : String)
     env::set_var("password", password);
 }
 
-fn start_ssh_session() -> (ChildStdin, ChildStdout)
-{
+// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+#[tauri::command]
+fn get_phones() -> String {
+    
     let cmd = r"C:\Program Files\PuTTY\plink.exe"; 
     let mut child = Command::new(cmd)
     .args([
@@ -30,21 +32,12 @@ fn start_ssh_session() -> (ChildStdin, ChildStdout)
         ])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
         .spawn()
         .expect("failed to start plink");
 
-    let stdin = child.stdin.take().expect("no stdin");
+    let mut stdin = child.stdin.take().expect("no stdin");
     let stdout = child.stdout.take().expect("no stdout");
 
-    (stdin, stdout)
-} 
-
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn get_phones() -> String {
-    
-    let (mut stdin, stdout) = start_ssh_session();
 
     // Disable pagination
     stdin.write_all(b"terminal length 0\r\n").unwrap();
@@ -56,7 +49,7 @@ fn get_phones() -> String {
     thread::sleep(Duration::from_secs(2));
 
     // Exit the session gracefully
-    writeln!(stdin, "exit").unwrap();
+    stdin.write_all(b"exit\r\n").unwrap();
     stdin.flush().unwrap();
 
     
@@ -158,7 +151,24 @@ fn get_phones() -> String {
 
 #[tauri::command]
 fn write_phone(dn : i8, name : String, label : String, number : i16, pickup : Option<i8>) -> String {
-    let (mut stdin, stdout) = start_ssh_session();
+    let cmd = r"C:\Program Files\PuTTY\plink.exe"; 
+    let mut child = Command::new(cmd)
+    .args([
+            "-ssh",
+            "-l", &env::var("user").unwrap(),
+            "-pw", &env::var("password").unwrap(),
+            "-noagent",
+            "-batch", // disables any interactive GUI
+            &env::var("ip").unwrap(),
+        ])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("failed to start plink");
+
+    let mut stdin = child.stdin.take().expect("no stdin");
+    let stdout = child.stdout.take().expect("no stdout");
+
 
     // Disable pagination
     stdin.write_all(b"terminal length 0\r\n").unwrap();
