@@ -13,6 +13,12 @@ impl SshSession{
         self.stdin.write_all(bytes).unwrap();
         self.stdin.flush().unwrap();
     }
+
+    pub fn end(&mut self)
+    {
+        self.send(b"end\r\n");
+        self.send(b"exit\r\n");
+    }
 }
 
 pub fn start_ssh_session() -> io::Result<SshSession> {
@@ -29,6 +35,7 @@ pub fn start_ssh_session() -> io::Result<SshSession> {
         ])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .stderr(Stdio::null())
         .spawn()?;
 
     let stdin = child.stdin.take().ok_or_else(|| io::Error::new(io::ErrorKind::Other, "no stdin"))?;

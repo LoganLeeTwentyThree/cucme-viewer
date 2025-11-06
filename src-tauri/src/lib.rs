@@ -31,7 +31,7 @@ fn get_phones() -> String {
     thread::sleep(Duration::from_secs(2));
 
     // Exit the session gracefully
-    session.send(b"exit\r\n");
+    session.end();
 
     
     let mut reader = BufReader::new(session.stdout);
@@ -39,6 +39,7 @@ fn get_phones() -> String {
     let mut dns : Vec<DN> = Vec::new();
 
     loop{
+        
         buf.clear();
         let num = reader.read_line(&mut buf).unwrap();
         if num == 0
@@ -85,9 +86,7 @@ fn get_pools() -> String {
     session.send(b"show config\r\n");
     thread::sleep(Duration::from_secs(2));
 
-    // Exit the session gracefully
-    session.send(b"exit");
-
+    session.end();
     
     let mut reader = BufReader::new(session.stdout);
     let mut buf = String::new();
@@ -107,26 +106,60 @@ fn get_pools() -> String {
             reader.read_until(b'!', &mut byte_arr).unwrap();
             buf.push_str(&String::from_utf8_lossy(&byte_arr));
 
-            let reg = Regex::new(r"(?ms)voice\s+register\s+pool\s+(\d+).*?id\s+mac\s+([A-F0-9.]+).*?number\s+\d+\s+dn\s+(\d+)(?:.*?paging-dn\s+(\d+))?").unwrap();
-            if let Some(caps) = reg.captures(&buf) {
+            let re = Regex::new(
+                r"(?ms)voice\s+register\s+pool\s+(\d+).*?id\s+mac\s+([A-F0-9.]+).*?number\s+\d+\s+dn\s+(\d+)(?:.*?paging-dn\s+(\d+))?"
+            ).unwrap();
+
+            if let Some(caps) = re.captures(&buf) {
+                let id = caps.get(1).map(|m| m.as_str()).unwrap_or("");
+                let mac = caps.get(2).map(|m| m.as_str()).unwrap_or("");
+                let number = caps.get(3).map(|m| m.as_str()).unwrap_or("");
+                let paging_dn = caps.get(4).map(|m| m.as_str().to_string());
+
                 pools.push(Pool {
-                    id: caps.get(0).unwrap().as_str().parse().unwrap(),
-                    mac: caps.get(1).unwrap().as_str().into(),
-                    dn: caps.get(2).unwrap().as_str().parse().unwrap(),
-                    paging_dn: caps.get(3).and_then(|m| m.as_str().parse::<i8>().ok())
+                    id: id.into(),
+                    mac: mac.into(),
+                    dn: number.into(),
+                    paging_dn,
                 });
             }else {
                 break;
             }
-            
+                
         }
+            
+    }
 
-        
-    } 
+    
 
     Value::to_string(&json!(pools))
+} 
+
+    
+#[tauri::command]
+fn restart_phone(pool : i8)
+{
+    let mut session = start_ssh_session().unwrap();
+
+    // Disable pagination
+    session.send(b"terminal length 0\r\n");
+    thread::sleep(Duration::from_millis(300));
+
+    session.send(b"config terminal\r\n");
+    thread::sleep(Duration::from_secs(1));
+
+    session.send(&format_bytes!(b"voice register pool {}\r\n", pool)[..]);
+    thread::sleep(Duration::from_secs(1));
+
+    session.send(b"restart\r\n");
+    thread::sleep(Duration::from_secs(1));
+
+    session.end();
+
+
 
 }
+
 
 #[tauri::command]
 fn write_phone(dn : i8, name : String, label : String, number : i16, pickup : Option<i8>) -> String {
@@ -180,7 +213,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![get_phones, write_phone, set_credentials, get_pools])
+        .invoke_handler(tauri::generate_handler![get_phones, write_phone, set_credentials, get_pools, restart_phone])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

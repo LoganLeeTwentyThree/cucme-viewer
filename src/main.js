@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 
+let phone_arr = []
+
 document.addEventListener("DOMContentLoaded", () =>{
     let ip = ''
     while (ip == '')
@@ -20,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () =>{
     }
     
     invoke("set_credentials", {ip: ip, user: user, password: password})
+    populate_phones()
 
     let phone_tab = document.getElementById("phone-tab")
     phone_tab.addEventListener('click', () => {
@@ -58,8 +61,12 @@ function populate_pools()
 {
     invoke("get_pools")
     .then((s) => {
-        console.log(s)
         let main = document.getElementById("main")
+        let info = document.createElement("div")
+        info.classList = "info"
+        info.innerHTML = "Each pool represents a physical phone device. It holds the paging number as well as mac address."
+        main.appendChild(info)
+
         let pool_arr = JSON.parse(s)
         pool_arr.forEach(element => {
             let parent = document.createElement("div")
@@ -80,14 +87,29 @@ function populate_pools()
             let numberContainer = document.createElement("div")
             
             let number = document.createElement("input")
-            number.value = element.number
+            number.value = element.dn
             number.readOnly = true
 
             let numberLabel = document.createElement("div")
             numberLabel.innerHTML = "Linked Phone ID:"
 
+            let nameLabel = document.createElement("div")
+            nameLabel.innerHTML = "Linked Phone Name:"
+
+            let name = document.createElement("input")
+            name.value = phone_arr.find((e) => 
+            {
+                if( e.id == element.dn )
+                    return true
+                else
+                    return false
+            }).name
+            name.readOnly = true
+
             numberContainer.appendChild(numberLabel)
             numberContainer.appendChild(number)
+            numberContainer.appendChild(nameLabel)
+            numberContainer.appendChild(name)
 
             parent.appendChild(id)
             parent.appendChild(mac)
@@ -96,7 +118,7 @@ function populate_pools()
 
             let pagingContainer = document.createElement("div")
             let pagingLabel = document.createElement("div")
-            pagingLabel.innerHTML = "Paging dn:"
+            pagingLabel.innerHTML = "Paging DN:"
 
             let paging = document.createElement("input")
             if(element.paging_dn != null)
@@ -110,64 +132,21 @@ function populate_pools()
             pagingContainer.appendChild(pagingLabel)
             pagingContainer.appendChild(paging)
             container.appendChild(pagingContainer)
-/*
-            let edit = document.createElement("button")
-            edit.innerHTML = "Edit"
-            container.appendChild(edit)
 
-            edit.addEventListener('click', () => {
-                name.readOnly = false;
-                number.readOnly = false;
-                label.readOnly = false;
-                parent.style = "border: 2px solid yellow;"
+            let restart = document.createElement("button")
+            restart.innerHTML = "Restart"
+            container.appendChild(restart)
 
-                let submit = document.createElement("button")
-                submit.innerHTML = "Submit"
-                container.appendChild(submit)
-                edit.disabled = true
-
-                document.addEventListener('click', function(event) {
-                    if (event.target !== parent && !parent.contains(event.target)) {
-                        edit.disabled = false
-                        container.removeChild(submit)
-                        name.readOnly = true;
-                        number.readOnly = true;
-                        label.readOnly = true;
-                        parent.style = ""
-                        document.removeEventListener('click')
-                        
-                        
-                    }
-                });
-
-                submit.addEventListener('click', () =>{
-                    show_load();
-                    if(typeof Number(pickup.value) == 'number')
-                    {
-                        invoke("write_phone", {dn: element.id, name: name.value, number: Number(number.value), label: label.value, pickup: Number(pickup.value)})
-                        .then((s) => {
-                            console.log(s)
-                            hide_load()
-                        })
-                    }else
-                    {
-                        invoke("write_phone", {dn: element.id, name: name.value, number: Number(number.value), label: label.value})
-                        .then((s) => {
-                            console.log(s)
-                            hide_load()
-                        })
-                    }
-                    
-
-                })
+            restart.addEventListener('click', () => {
                 
+                invoke('restart_phone', {pool: Number(element.id)});
             })
             
             
 
             
             
-            */
+            
             main.appendChild(parent)
         });
     })
@@ -179,7 +158,12 @@ function populate_phones()
     invoke("get_phones")
     .then((s) => {
         let main = document.getElementById("main")
-        let phone_arr = JSON.parse(s)
+        let info = document.createElement("div")
+        info.classList = "info"
+        info.innerHTML = "Each voice register dn holds information about a specific phone: the label, the extension, the name, and the pickup group. The label is displayed on the screen, while the name is displayed for caller ID."
+        main.appendChild(info)
+        
+        phone_arr = JSON.parse(s)
         phone_arr.forEach(element => {
             let parent = document.createElement("div")
             parent.classList = "card"
