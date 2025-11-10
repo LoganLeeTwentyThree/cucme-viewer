@@ -9,6 +9,8 @@ mod pool;
 use pool::*;
 mod ssh;
 use ssh::*;
+mod huntgroup;
+use huntgroup::*;
 
 #[tauri::command]
 fn set_credentials(ip : String, user : String, password : String)
@@ -19,8 +21,7 @@ fn set_credentials(ip : String, user : String, password : String)
 }
 
 #[tauri::command]
-fn get_phones() -> String {
-    
+fn get_config() -> String {
     let mut session = start_ssh_session().unwrap();
 
     // Disable pagination
@@ -31,15 +32,22 @@ fn get_phones() -> String {
     thread::sleep(Duration::from_secs(2));
 
     // Exit the session gracefully
-    session.end();
+    session.send(b"exit\r\n");
 
+    let mut buf = String::new();
+    session.stdout.read_to_string(&mut buf).unwrap();
+    buf
+}
+
+#[tauri::command]
+fn get_phones(config : String) -> String {
     
-    let mut reader = BufReader::new(session.stdout);
+    let mut reader = BufReader::new(config.as_bytes());
     let mut buf = String::new();
     let mut dns : Vec<DN> = Vec::new();
 
     loop{
-        
+        println!("{}", buf);
         buf.clear();
         let num = reader.read_line(&mut buf).unwrap();
         if num == 0
@@ -76,19 +84,9 @@ fn get_phones() -> String {
 }
 
 #[tauri::command]
-fn get_pools() -> String {
-    let mut session = start_ssh_session().unwrap();
+fn get_pools(config : String) -> String {
     
-    // Disable pagination
-    session.send(b"terminal length 0\r\n");
-    thread::sleep(Duration::from_millis(300));
-
-    session.send(b"show config\r\n");
-    thread::sleep(Duration::from_secs(2));
-
-    session.end();
-    
-    let mut reader = BufReader::new(session.stdout);
+    let mut reader = BufReader::new(config.as_bytes());
     let mut buf = String::new();
     let mut pools : Vec<Pool> = Vec::new();
 
@@ -135,7 +133,52 @@ fn get_pools() -> String {
     Value::to_string(&json!(pools))
 } 
 
+#[tauri::command]
+fn get_hunt_groups(config : String) -> String {
     
+    let mut reader = BufReader::new(config.as_bytes());
+    let mut buf = String::new();
+    let mut hunt_groups : Vec<HuntGroup> = Vec::new();
+
+    loop{
+        buf.clear();
+        let num = reader.read_line(&mut buf).unwrap();
+        if num == 0
+        {
+            break;
+        }
+
+        if buf.starts_with("voice hunt-group")
+        {
+            let mut byte_arr : Vec<u8> = Vec::new();
+            reader.read_until(b'!', &mut byte_arr).unwrap();
+            buf.push_str(&String::from_utf8_lossy(&byte_arr));
+
+            let re = Regex::new(
+                r"(?mis)voice\s+hunt-group\s+(\d+).*?final\s+(\d+).*?list\s+([\d,]+).*?pilot\s+(\d+).*?name\s+([A-Za-z0-9 _-]+)"
+            ).unwrap();
+
+            if let Some(caps) = re.captures(&buf) {
+                let id: i8 = caps.get(1).map(|m| m.as_str().parse().unwrap()).unwrap_or(-1);
+                let final_ext: i16 = caps.get(2).map(|m| m.as_str().parse().unwrap()).unwrap_or(-1);
+                let list = caps.get(3).map(|m| m.as_str()).unwrap_or("").to_string();
+                let pilot: i16 = caps.get(4).map(|m| m.as_str().parse().unwrap()).unwrap_or(-1);
+                let name = caps.get(5).map(|m| m.as_str()).unwrap_or("").to_string();
+
+                hunt_groups.push(HuntGroup { id, final_ext, list, pilot, name });
+            }else {
+                break;
+            }
+                
+        }
+            
+    }
+
+    
+
+    Value::to_string(&json!(hunt_groups))
+} 
+
 #[tauri::command]
 fn restart_phone(pool : i8)
 {
@@ -155,9 +198,27 @@ fn restart_phone(pool : i8)
     thread::sleep(Duration::from_secs(1));
 
     session.end();
+}
 
+#[tauri::command]
+fn restart_all_phones() 
+{
+    let mut session = start_ssh_session().unwrap();
 
+    // Disable pagination
+    session.send(b"terminal length 0\r\n");
+    thread::sleep(Duration::from_millis(300));
 
+    session.send(b"config terminal\r\n");
+    thread::sleep(Duration::from_secs(1));
+
+    session.send(b"voice register global\r\n");
+    thread::sleep(Duration::from_secs(1));
+
+    session.send(b"restart\r\n");
+    thread::sleep(Duration::from_secs(1));
+
+    session.end();
 }
 
 
@@ -186,12 +247,6 @@ fn write_phone(dn : i8, name : String, label : String, number : i16, pickup : Op
         thread::sleep(Duration::from_secs(1));
     }
 
-    session.send(b"voice register global\r\n");
-    thread::sleep(Duration::from_secs(1));
-
-    session.send(b"create profile\r\n");
-    thread::sleep(Duration::from_secs(70));
-
     session.send(b"end\r\n");
     thread::sleep(Duration::from_secs(1));
 
@@ -213,7 +268,14 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![get_phones, write_phone, set_credentials, get_pools, restart_phone])
+        .invoke_handler(tauri::generate_handler![get_phones, 
+            write_phone, 
+            set_credentials, 
+            get_pools, 
+            restart_phone, 
+            get_config,
+            restart_all_phones,
+            get_hunt_groups])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 
 let phone_arr = []
+let CONFIG = ""
 
 document.addEventListener("DOMContentLoaded", () =>{
     let ip = ''
@@ -22,25 +23,38 @@ document.addEventListener("DOMContentLoaded", () =>{
     }
     
     invoke("set_credentials", {ip: ip, user: user, password: password})
-    populate_phones()
-
-    let phone_tab = document.getElementById("phone-tab")
-    phone_tab.addEventListener('click', () => {
-        clear_view()
-        show_load()
+    invoke("get_config").then((cfg) => {
+        CONFIG = cfg
         populate_phones()
-        hide_load()
-    })
 
-    let pools_tab = document.getElementById("pools-tab")
-    pools_tab.addEventListener('click', () => {
-        clear_view()
-        show_load()
-        populate_pools()
-        hide_load()
-    })
+        document.getElementById("phone-tab").addEventListener('click', () => {
+            clear_view()
+            show_load()
+            populate_phones()
+            hide_load()
+        })
+
+        document.getElementById("pools-tab").addEventListener('click', () => {
+            clear_view()
+            show_load()
+            populate_pools()
+            hide_load()
+        })
+
+        document.getElementById("hunt-group-tab").addEventListener('click', () => {
+            
+            clear_view()
+            show_load()
+            populate_hunt_groups()
+            hide_load()
+            
+        })
+    });
+
+    
     
 })
+
 
 function clear_view()
 {
@@ -57,15 +71,85 @@ function hide_load()
     document.getElementById('loading-spinner').style.display = 'none'
 }
 
+function populate_hunt_groups()
+{
+    invoke("get_hunt_groups", {config: CONFIG})
+    .then((s) => {
+        let main = document.getElementById("main")
+        let info = document.createElement("div")
+        info.classList = "info"
+        info.innerHTML = "A hunt group is a group of extensions that can all be called at the same time by calling the pilot number."
+        main.appendChild(info)
+
+        let hg_arr = JSON.parse(s)
+        hg_arr.forEach((element) => {
+            let parent = document.createElement("div")
+            parent.classList = "card"
+
+            let name = document.createElement("input")
+            name.readOnly = true
+            name.value = element.name
+            name.classList = "name"
+
+            let id = document.createElement("div")
+            id.innerHTML = element.id
+            id.classList = "id"
+
+            let numberContainer = document.createElement("div")
+            numberContainer.classList = "number"
+            
+            let pilotLabel = document.createElement("div")
+            pilotLabel.innerHTML = "Pilot Extension:"
+
+            let pilot = document.createElement("input")
+            pilot.value = element.pilot
+            pilot.readOnly = true
+
+            numberContainer.appendChild(pilotLabel)
+            numberContainer.appendChild(pilot)
+
+            let listLabel = document.createElement("div")
+            listLabel.innerHTML = "List:"
+
+            numberContainer.appendChild(listLabel)
+
+            console.log(element)
+            let list = JSON.parse("[" + element.list + "]")
+            list.forEach((num) => {
+                let listE = document.createElement("input")
+                listE.value = num
+                listE.readOnly = true
+                numberContainer.appendChild(listE)
+            })
+            
+            
+            parent.appendChild(id)
+            parent.appendChild(name)
+            parent.appendChild(numberContainer)
+            main.appendChild(parent)
+        })
+
+        
+    })
+}
+
 function populate_pools()
 {
-    invoke("get_pools")
+    invoke("get_pools", {config: CONFIG})
     .then((s) => {
         let main = document.getElementById("main")
         let info = document.createElement("div")
         info.classList = "info"
         info.innerHTML = "Each pool represents a physical phone device. It holds the paging number as well as mac address."
         main.appendChild(info)
+
+        let restartAll = document.createElement("button")
+        restartAll.innerHTML = "Restart All Phones"
+        restartAll.addEventListener('click', () => {
+            restartAll.disabled = true
+            invoke("restart_all_phones").then(() => { restartAll.disabled = false } )
+        })
+        main.appendChild(restartAll)
 
         let pool_arr = JSON.parse(s)
         pool_arr.forEach(element => {
@@ -99,10 +183,7 @@ function populate_pools()
             let name = document.createElement("input")
             name.value = phone_arr.find((e) => 
             {
-                if( e.id == element.dn )
-                    return true
-                else
-                    return false
+                return e.id == element.dn 
             }).name
             name.readOnly = true
 
@@ -155,7 +236,7 @@ function populate_pools()
 function populate_phones()
 {
    
-    invoke("get_phones")
+    invoke("get_phones", {config: CONFIG})
     .then((s) => {
         let main = document.getElementById("main")
         let info = document.createElement("div")
@@ -262,17 +343,23 @@ function populate_phones()
                     {
                         invoke("write_phone", {dn: element.id, name: name.value, number: Number(number.value), label: label.value, pickup: Number(pickup.value)})
                         .then((s) => {
-                            console.log(s)
                             hide_load()
+                            clear_view()
+                            invoke("get_config").then((cfg) => CONFIG = cfg)
                         })
                     }else
                     {
                         invoke("write_phone", {dn: element.id, name: name.value, number: Number(number.value), label: label.value})
                         .then((s) => {
-                            console.log(s)
                             hide_load()
+                            clear_view()
+                            invoke("get_config").then((cfg) => CONFIG = cfg)
                         })
                     }
+
+                    
+
+                    
                     
 
                 })
