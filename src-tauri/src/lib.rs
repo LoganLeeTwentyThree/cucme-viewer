@@ -47,7 +47,6 @@ fn get_phones(config : String) -> String {
     let mut dns : Vec<DN> = Vec::new();
 
     loop{
-        println!("{}", buf);
         buf.clear();
         let num = reader.read_line(&mut buf).unwrap();
         if num == 0

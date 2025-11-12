@@ -102,7 +102,6 @@ function populate_hunt_groups()
 
             let pilot = document.createElement("input")
             pilot.value = element.pilot
-            pilot.readOnly = true
 
             numberContainer.appendChild(pilotLabel)
             numberContainer.appendChild(pilot)
@@ -124,12 +123,18 @@ function populate_hunt_groups()
                 let listE = document.createElement("input")
                 listE.value = num
                 listE.classList = "removable"
-                listE.pattern = "[0-9]*"
 
                 let remove = document.createElement("div")
                 remove.classList = "remove-button"
                 remove.addEventListener('click', () => {
-                    listElementContainer.remove()
+                    if(listView.children.length > 2)
+                    {
+                        listElementContainer.remove()
+                    }else
+                    {
+                        alert("Group must have at least 2 extensions!")
+                    }
+                    
                 })
 
                 let minusIcon = document.createElement("i")
@@ -146,6 +151,7 @@ function populate_hunt_groups()
 
                 listView.appendChild(listElementContainer)
             }
+
             list.forEach(createListElement)
 
             let addButton = document.createElement("button")
