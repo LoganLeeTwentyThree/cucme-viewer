@@ -1,6 +1,7 @@
 use std::process::{Command, Stdio, ChildStdin, ChildStdout};
 use std::io::{self, Write};
-use std::env;
+use std::time::Duration;
+use std::{env, thread};
 
 pub struct SshSession {
     pub stdin: ChildStdin,
@@ -17,6 +18,14 @@ impl SshSession{
     pub fn end(&mut self)
     {
         self.send(b"end\r\n");
+        self.send(b"exit\r\n");
+    }
+
+    pub fn end_and_save(&mut self)
+    {
+        self.send(b"end\r\n");
+        self.send(b"wr mem\r\n");
+        thread::sleep(Duration::from_secs(2));
         self.send(b"exit\r\n");
     }
 }

@@ -87,7 +87,6 @@ function populate_hunt_groups()
             parent.classList = "card"
 
             let name = document.createElement("input")
-            name.readOnly = true
             name.value = element.name
             name.classList = "name"
 
@@ -113,14 +112,76 @@ function populate_hunt_groups()
 
             numberContainer.appendChild(listLabel)
 
-            console.log(element)
             let list = JSON.parse("[" + element.list + "]")
-            list.forEach((num) => {
+            let listView = document.createElement("div")
+            listView.style.overflowY = "scroll"
+            listView.style.height = "80px"
+
+            function createListElement(num) {
+                let listElementContainer = document.createElement("div")
+                listElementContainer.style.display = "flex"
+
                 let listE = document.createElement("input")
                 listE.value = num
-                listE.readOnly = true
-                numberContainer.appendChild(listE)
+                listE.classList = "removable"
+                listE.pattern = "[0-9]*"
+
+                let remove = document.createElement("div")
+                remove.classList = "remove-button"
+                remove.addEventListener('click', () => {
+                    listElementContainer.remove()
+                })
+
+                let minusIcon = document.createElement("i")
+                minusIcon.classList = "fa-solid fa-minus"
+                minusIcon.style.width = "100%"
+                minusIcon.style.height = "100%"
+                remove.appendChild(minusIcon)
+                
+
+                listElementContainer.appendChild(listE)
+                listElementContainer.appendChild(remove)
+
+                
+
+                listView.appendChild(listElementContainer)
+            }
+            list.forEach(createListElement)
+
+            let addButton = document.createElement("button")
+            addButton.innerHTML = "Add Extension"
+
+            addButton.addEventListener('click', () => {
+
+                createListElement("Enter Extension")
+
             })
+
+
+            let submitButton = document.createElement("button")
+            submitButton.innerHTML = "Submit"
+
+            submitButton.addEventListener('click', () => {
+                let extList = ""
+                Array.from(listView.getElementsByTagName("input")).forEach((element) => {
+                    
+                    if( !isNaN(element.value) )
+                    {
+                        extList += element.value + ","
+                    }
+                    
+                })
+
+                show_load()
+                invoke('write_voice_hunt_group', {list : extList, id : Number(element.id), pilot : Number(pilot.value), name: name.value})
+                .then(() => {
+                    hide_load()
+                })
+            })
+
+            numberContainer.appendChild(listView)
+            numberContainer.appendChild(addButton)
+            numberContainer.appendChild(submitButton)
             
             
             parent.appendChild(id)

@@ -73,6 +73,7 @@ input {
   grid-area: name; 
   overflow: hidden;
   text-overflow: ellipsis;
+  height: fit-content;
 }
 
 .id {
@@ -97,8 +98,27 @@ input {
   width: 95%;
 }
 
+.removable {
+  width: 80%;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+.remove-button {
+  background-color: red;
+  width: 20%;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  margin-bottom: 2px;
+  margin-top: 2px;
+  color: white;
+}
+
+.remove-button:hover {
+  background-color: lightcoral;
+}
+
 #loading-spinner {
-  /* Styles for your spinner, e.g., animation, positioning */
   position: fixed;
   top: 50%;
   left: 50%;

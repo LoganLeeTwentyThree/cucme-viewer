@@ -247,20 +247,45 @@ fn write_phone(dn : i8, name : String, label : String, number : i16, pickup : Op
         thread::sleep(Duration::from_secs(1));
     }
 
-    session.send(b"end\r\n");
-    thread::sleep(Duration::from_secs(1));
-
-    session.send(b"wr mem\r\n");
-    thread::sleep(Duration::from_secs(2));
-
-    // Exit the session gracefully
-    session.send(b"exit\r\n");
+    session.end_and_save();
 
     let mut reader = BufReader::new(session.stdout);
     let mut bytes = Vec::new();
     reader.read_to_end(&mut bytes).unwrap();
     let buf = String::from_utf8_lossy(&bytes).to_string();
     return buf
+}
+
+#[tauri::command]
+fn write_voice_hunt_group(list : String, id : i8, pilot : i16, name : String) -> String
+{
+    let mut session = start_ssh_session().unwrap();
+
+    // Disable pagination
+    session.send(b"terminal length 0\r\n");
+    thread::sleep(Duration::from_millis(300));
+
+    session.send(b"config terminal\r\n");
+    thread::sleep(Duration::from_secs(1));
+
+    session.send(&format_bytes!(b"voice hunt-group {}\r\n", id)[..]);
+    thread::sleep(Duration::from_secs(1));
+
+    session.send(&format_bytes!(b"list {}\r\n", list[..list.len()-1].as_bytes())[..]);
+    thread::sleep(Duration::from_secs(1));
+
+    session.send(&format_bytes!(b"no pilot\r\npilot {}\r\n", pilot)[..]);
+    thread::sleep(Duration::from_secs(1));
+
+    session.send(&format_bytes!(b"name {}\r\n", name.as_bytes())[..]);
+    thread::sleep(Duration::from_secs(1));
+
+    session.end_and_save();
+
+    
+    let mut buf = String::new();
+    session.stdout.read_to_string(&mut buf).unwrap();
+    buf
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -275,7 +300,8 @@ pub fn run() {
             restart_phone, 
             get_config,
             restart_all_phones,
-            get_hunt_groups])
+            get_hunt_groups,
+            write_voice_hunt_group])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
